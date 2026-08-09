@@ -1,0 +1,22 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{amsmath,graphicx}
+\usepackage{hyperref}
+
+\title{Agentic Extraction of Metadata from Scientific Manuscripts for Automated Journal Submission}
+\author{Jane A. Smith$^{1}$ \and John B. Doe$^{2}$}
+\thanks{$^{1}$Department of Computer Science, Stanford University, Stanford, CA 94305, USA. Email: jane.smith@stanford.edu}
+\thanks{$^{2}$Institute for AI Research, MIT, Cambridge, MA 02139, USA. Email: john.doe@mit.edu}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+In recent years, the process of submitting scientific manuscripts to academic journals has become increasingly complex and time-consuming. Authors are required to manually extract and re-enter metadata such as titles, author names, affiliations, email addresses, and abstracts into various journal submission systems, each with different form layouts and field requirements. This repetitive task is error-prone and detracts from valuable research time. In this paper, we present an agentic system that automatically identifies pertinent pieces of information from manuscript files and fills the respective fields when submitting to various journal submission systems. Our approach employs a multi-pass extraction pipeline combining LaTeX structure analysis, pattern-based heuristics, and optional large language model enhancement to achieve high accuracy across diverse manuscript formats including LaTeX, PDF, DOCX, and plain text. We demonstrate that our system can correctly extract title, author information, affiliations, email addresses, and abstracts with over 90\% accuracy on a benchmark dataset of 200 manuscripts. Furthermore, we introduce intelligent abstract shortening capabilities that offer multiple strategies when abstracts exceed the common 250-word limit imposed by many journals. We also describe minor LaTeX source transformations that adapt manuscripts to target journal formatting requirements for Elsevier, Springer, IEEE, Nature, ACM, PLOS, and Wiley publications. The system is implemented as a Chrome browser extension, enabling seamless integration with existing journal submission workflows. Our user study with 15 researchers showed a 70\% reduction in submission preparation time compared to manual entry. We conclude that agentic manuscript assistants represent a practical and immediately deployable solution to a widespread pain point in academic publishing.
+\end{abstract}
+
+\textbf{Keywords:} manuscript submission, metadata extraction, browser extension, LaTeX formatting, natural language processing
+
+\section{Introduction}
+The academic publishing workflow has evolved significantly...
+
+\end{document}
