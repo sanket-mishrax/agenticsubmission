@@ -73,9 +73,21 @@ Requires **Firefox 121+** (Manifest V3 with ES module background scripts).
 
 **Permanent install (unsigned / self-distributed):**
 
-1. Build the `.xpi` package (see [Packaging for Firefox](#packaging-for-firefox) below)
-2. Open `about:addons` → gear icon → **Install Add-on From File…**
-3. Select the generated `.xpi` from `dist/`
+**Option A — use the pre-built file (no build needed):**
+
+1. In this repo, open the `releases/` folder
+2. Use `releases/manuscript-submit-assistant-1.0.1.xpi`
+3. In Firefox: `about:addons` → gear icon → **Install Add-on From File…**
+4. Select that `.xpi` file
+
+**Option B — build it yourself:**
+
+1. From the repo root, run `npm run package:firefox`
+2. The file is created at `dist/manuscript-submit-assistant-<version>.xpi`
+3. A copy is also placed in `releases/`
+4. Install via `about:addons` → **Install Add-on From File…**
+
+> **Can't find the file?** The `dist/` folder is only created after you run the build script. If you haven't built yet, use the committed copy in `releases/` instead.
 
 > **Note:** Unsigned add-ons require `xpinstall.signatures.required` set to `false` in `about:config` (advanced users only). For public distribution, publish to [Firefox Add-ons (AMO)](https://addons.mozilla.org/).
 
@@ -96,7 +108,10 @@ bash scripts/package-firefox.sh
 npm run package:firefox:node
 ```
 
-Output: `dist/manuscript-submit-assistant-<version>.xpi`
+Output:
+
+- `dist/manuscript-submit-assistant-<version>.xpi` (local build)
+- `releases/manuscript-submit-assistant-<version>.xpi` (committed copy — easiest to find)
 
 The archive contains `manifest.json` at the root, as Firefox requires. Install via `about:addons` → **Install Add-on From File…`.
 
@@ -155,7 +170,9 @@ extension/
 scripts/
 ├── package-firefox.sh      # Build Firefox .xpi (bash + zip)
 └── package-firefox.mjs     # Build Firefox .xpi (Node wrapper)
-dist/                       # Generated .xpi packages (gitignored)
+dist/                       # Generated .xpi packages (gitignored, local builds)
+releases/                   # Pre-built .xpi (committed — use this if you didn't build)
+├── manuscript-submit-assistant-1.0.1.xpi
 ├── background/
 │   ├── service-worker.js   # Chrome background entry
 │   ├── event-page.js       # Firefox background entry

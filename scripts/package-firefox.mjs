@@ -40,11 +40,17 @@ function main() {
   }
 
   console.log(`\nCreated: ${outPath}`);
-  console.log('\nInstall in Firefox:');
-  console.log('  1. Open about:addons');
-  console.log('  2. Gear icon → Install Add-on From File…');
-  console.log(`  3. Select ${outPath}`);
-  console.log('\nNote: unsigned installs may require xpinstall.signatures.required = false in about:config');
+  const releasesDir = join(ROOT, 'releases');
+  mkdirSync(releasesDir, { recursive: true });
+  const releasesPath = join(releasesDir, xpiName);
+  execSync(`cp "${outPath}" "${releasesPath}"`, { stdio: 'inherit' });
+
+  console.log('\n==========================================');
+  console.log('  Firefox .xpi created successfully');
+  console.log('==========================================\n');
+  console.log(`  Local build:  ${outPath}`);
+  console.log(`  Releases:     ${releasesPath}`);
+  console.log(`\nIf you cloned this repo, use: releases/${xpiName}\n`);
 }
 
 main();

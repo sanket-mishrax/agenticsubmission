@@ -19,6 +19,8 @@ mkdir -p "$OUT_DIR"
 
 # Remove previous build of the same version
 rm -f "$OUT_DIR/$XPI_NAME"
+RELEASES_DIR="$ROOT/releases"
+mkdir -p "$RELEASES_DIR"
 
 # XPI must contain manifest.json at the archive root (not inside a subfolder)
 (
@@ -30,7 +32,18 @@ rm -f "$OUT_DIR/$XPI_NAME"
     -x "*~"
 )
 
-echo "Created: $OUT_DIR/$XPI_NAME"
+cp "$OUT_DIR/$XPI_NAME" "$RELEASES_DIR/$XPI_NAME"
+
+echo ""
+echo "=========================================="
+echo "  Firefox .xpi created successfully"
+echo "=========================================="
+echo ""
+echo "  Local build:  $OUT_DIR/$XPI_NAME"
+echo "  Releases:     $RELEASES_DIR/$XPI_NAME"
+echo ""
+echo "If you cloned this repo, use the file in releases/:"
+echo "  releases/$XPI_NAME"
 echo ""
 echo "Install in Firefox:"
 echo "  1. Open about:addons"
