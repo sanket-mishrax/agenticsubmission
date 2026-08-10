@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manuscript Submit Assistant</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="header">
+    <div class="header-title">
+      <span class="logo">📝</span>
+      <h1>Manuscript Assistant</h1>
+    </div>
+    <a href="#" id="settings-link" class="settings-btn" title="Settings">⚙️</a>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="upload">Upload</button>
+    <button class="tab" data-tab="extract">Extract</button>
+    <button class="tab" data-tab="abstract">Abstract</button>
+    <button class="tab" data-tab="latex">LaTeX</button>
+    <button class="tab" data-tab="submit">Submit</button>
+  </nav>
+
+  <main class="content">
+    <!-- Upload Tab -->
+    <section id="tab-upload" class="tab-panel active">
+      <div class="upload-zone" id="upload-zone">
+        <div class="upload-icon">📄</div>
+        <p class="upload-text">Drop manuscript here or click to browse</p>
+        <p class="upload-hint">Supports .tex, .txt, .docx, .pdf</p>
+        <input type="file" id="file-input" accept=".tex,.txt,.docx,.pdf" hidden>
+      </div>
+      <div id="upload-status" class="status-msg hidden"></div>
+      <div id="file-info" class="file-info hidden"></div>
+    </section>
+
+    <!-- Extract Tab -->
+    <section id="tab-extract" class="tab-panel">
+      <div id="extract-empty" class="empty-state">
+        <p>Upload a manuscript first to extract metadata.</p>
+      </div>
+      <div id="extract-results" class="hidden">
+        <div class="agent-passes" id="agent-passes"></div>
+
+        <div class="field-group">
+          <label>Title <span class="confidence" id="title-confidence"></span></label>
+          <textarea id="field-title" rows="2"></textarea>
+        </div>
+
+        <div class="field-group">
+          <label>Authors</label>
+          <div id="field-authors" class="tag-list"></div>
+          <input type="text" id="author-input" placeholder="Add author name">
+          <button class="btn-sm" id="add-author-btn">+ Add</button>
+        </div>
+
+        <div class="field-group">
+          <label>Affiliations</label>
+          <div id="field-affiliations" class="tag-list"></div>
+        </div>
+
+        <div class="field-group">
+          <label>Email Addresses</label>
+          <div id="field-emails" class="tag-list"></div>
+        </div>
+
+        <div class="field-group">
+          <label>Keywords</label>
+          <input type="text" id="field-keywords">
+        </div>
+
+        <div class="field-group">
+          <label>Abstract <span id="abstract-word-count" class="word-count"></span></label>
+          <textarea id="field-abstract" rows="6"></textarea>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-secondary" id="copy-all-btn">Copy All</button>
+          <button class="btn btn-primary" id="save-fields-btn">Save Changes</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Abstract Tab -->
+    <section id="tab-abstract" class="tab-panel">
+      <div id="abstract-empty" class="empty-state">
+        <p>Upload a manuscript to manage abstract length.</p>
+      </div>
+      <div id="abstract-tools" class="hidden">
+        <div class="abstract-stats" id="abstract-stats"></div>
+        <div id="abstract-warning" class="warning-box hidden">
+          <strong>Abstract exceeds word limit</strong>
+          <p id="abstract-over-by"></p>
+        </div>
+        <h3>Shortening Options</h3>
+        <div id="shortening-options" class="shortening-options"></div>
+        <button class="btn btn-primary" id="apply-shortening-btn" disabled>Apply Selected</button>
+        <div id="llm-shorten-section" class="hidden">
+          <button class="btn btn-secondary" id="llm-shorten-btn">✨ AI Shorten (requires API key)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- LaTeX Tab -->
+    <section id="tab-latex" class="tab-panel">
+      <div id="latex-empty" class="empty-state">
+        <p>Upload a .tex file to format for target journals.</p>
+      </div>
+      <div id="latex-tools" class="hidden">
+        <div class="field-group">
+          <label>Target Journal</label>
+          <select id="journal-select"></select>
+        </div>
+        <button class="btn btn-primary" id="format-latex-btn">Apply Journal Format</button>
+        <div id="latex-changes" class="changes-list hidden"></div>
+        <div class="field-group">
+          <label>Formatted LaTeX</label>
+          <textarea id="latex-output" rows="10" readonly></textarea>
+          <button class="btn btn-secondary" id="copy-latex-btn">Copy LaTeX</button>
+          <button class="btn btn-secondary" id="download-latex-btn">Download .tex</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Submit Tab -->
+    <section id="tab-submit" class="tab-panel">
+      <div class="submit-info">
+        <h3>Journal Submission Autofill</h3>
+        <p>Navigate to a journal submission page, then use the buttons below to fill form fields automatically.</p>
+        <p class="hint">Supported: Elsevier Editorial Manager, Wiley ScholarOne, Springer Nature, and generic forms.</p>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" id="show-panel-btn">Show Autofill Panel on Page</button>
+        <button class="btn btn-secondary" id="autofill-btn">Autofill Current Page</button>
+      </div>
+      <div id="submit-status" class="status-msg hidden"></div>
+    </section>
+  </main>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+#msa-autofill-panel {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 300px;
+  background: #fff;
+  border: 1px solid #d0d7de;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  z-index: 2147483647;
+  color: #1f2328;
+}
+
+.msa-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #0969da;
+  color: #fff;
+  border-radius: 12px 12px 0 0;
+  font-weight: 600;
+}
+
+.msa-panel-header .msa-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.msa-panel-body {
+  padding: 14px;
+}
+
+.msa-system-name {
+  font-size: 12px;
+  color: #656d76;
+  margin: 0 0 10px;
+}
+
+.msa-fields {
+  margin-bottom: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.msa-field-tag {
+  background: #ddf4ff;
+  color: #0969da;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.msa-no-fields {
+  color: #656d76;
+  font-size: 12px;
+  margin: 0;
+}
+
+.msa-btn {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+
+.msa-btn-primary {
+  background: #0969da;
+  color: #fff;
+}
+
+.msa-btn-primary:hover {
+  background: #0860ca;
+}
+
+.msa-btn-secondary {
+  background: #f6f8fa;
+  color: #1f2328;
+  border: 1px solid #d0d7de;
+}
+
+.msa-btn-secondary:hover {
+  background: #eef1f4;
+}
+
+.msa-status {
+  margin-top: 8px;
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+.msa-status.msa-success {
+  background: #dafbe1;
+  color: #1a7f37;
+}
+
+.msa-status.msa-error {
+  background: #ffebe9;
+  color: #cf222e;
+}
