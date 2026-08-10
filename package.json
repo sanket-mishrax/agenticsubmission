@@ -1,0 +1,10 @@
+{
+  "name": "manuscript-submit-assistant",
+  "version": "1.0.1",
+  "private": true,
+  "description": "Agentic manuscript parser for journal submissions — Chrome and Firefox WebExtension",
+  "scripts": {
+    "package:firefox": "bash scripts/package-firefox.sh",
+    "package:firefox:node": "node scripts/package-firefox.mjs"
+  }
+}

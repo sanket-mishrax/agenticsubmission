@@ -73,11 +73,32 @@ Requires **Firefox 121+** (Manifest V3 with ES module background scripts).
 
 **Permanent install (unsigned / self-distributed):**
 
-1. Zip the contents of the `extension/` folder (not the folder itself)
-2. Open `about:config` and set `xpinstall.signatures.required` to `false` (advanced users only)
-3. Install the `.xpi` via `about:addons` → gear icon → **Install Add-on From File…**
+1. Build the `.xpi` package (see [Packaging for Firefox](#packaging-for-firefox) below)
+2. Open `about:addons` → gear icon → **Install Add-on From File…**
+3. Select the generated `.xpi` from `dist/`
+
+> **Note:** Unsigned add-ons require `xpinstall.signatures.required` set to `false` in `about:config` (advanced users only). For public distribution, publish to [Firefox Add-ons (AMO)](https://addons.mozilla.org/).
 
 For Firefox Add-ons (AMO) distribution, the manifest already includes `browser_specific_settings.gecko` with a fixed add-on ID.
+
+### Packaging for Firefox
+
+Build a distributable `.xpi` from the `extension/` folder:
+
+```bash
+# Option 1: npm script (uses zip)
+npm run package:firefox
+
+# Option 2: shell script directly
+bash scripts/package-firefox.sh
+
+# Option 3: Node.js wrapper
+npm run package:firefox:node
+```
+
+Output: `dist/manuscript-submit-assistant-<version>.xpi`
+
+The archive contains `manifest.json` at the root, as Firefox requires. Install via `about:addons` → **Install Add-on From File…`.
 
 ### Browser compatibility
 
@@ -131,6 +152,10 @@ The extension uses the standard WebExtension `browser`/`chrome` API via a small 
 ```
 extension/
 ├── manifest.json           # WebExtension manifest (MV3, Chrome + Firefox)
+scripts/
+├── package-firefox.sh      # Build Firefox .xpi (bash + zip)
+└── package-firefox.mjs     # Build Firefox .xpi (Node wrapper)
+dist/                       # Generated .xpi packages (gitignored)
 ├── background/
 │   ├── service-worker.js   # Chrome background entry
 │   ├── event-page.js       # Firefox background entry
