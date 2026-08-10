@@ -5,6 +5,7 @@
 (function () {
   'use strict';
 
+  const browserAPI = globalThis.browser ?? globalThis.chrome;
   const PANEL_ID = 'msa-autofill-panel';
 
   function createPanel() {
@@ -98,7 +99,7 @@
     status.className = 'msa-status';
 
     try {
-      const response = await chrome.runtime.sendMessage({ action: 'getManuscriptData' });
+      const response = await browserAPI.runtime.sendMessage({ action: 'getManuscriptData' });
       const data = response?.data;
       if (!data) {
         status.textContent = 'No manuscript loaded. Open the extension popup and upload a file first.';
@@ -160,7 +161,7 @@
     }
   }
 
-  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  browserAPI.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (message.action === 'showAutofillPanel') {
       createPanel();
       const panel = document.getElementById(PANEL_ID);

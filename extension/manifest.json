@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Manuscript Submit Assistant",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Agentic manuscript parser for journal submissions — extract metadata, autofill forms, shorten abstracts, and format LaTeX for target journals.",
   "permissions": ["storage", "activeTab", "scripting"],
   "host_permissions": ["<all_urls>"],
@@ -19,6 +19,7 @@
     "128": "icons/icon128.png"
   },
   "background": {
+    "scripts": ["background/event-page.js"],
     "service_worker": "background/service-worker.js",
     "type": "module"
   },
@@ -30,11 +31,21 @@
       "run_at": "document_idle"
     }
   ],
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
   "options_page": "options/options.html",
   "web_accessible_resources": [
     {
       "resources": ["lib/*"],
       "matches": ["<all_urls>"]
     }
-  ]
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "manuscript-submit-assistant@agenticsubmission.local",
+      "strict_min_version": "121.0"
+    }
+  }
 }

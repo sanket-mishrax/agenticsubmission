@@ -7,6 +7,7 @@ import { extractManuscriptMetadata } from '../lib/extractor.js';
 import { saveManuscriptData, getSettings } from '../lib/storage.js';
 import { generateShorteningOptions } from '../lib/abstract.js';
 import { getJournalList } from '../lib/latex-formatter.js';
+import { browserAPI } from '../lib/browser-api.js';
 
 let currentData = null;
 let selectedShortening = null;
@@ -22,7 +23,7 @@ document.querySelectorAll('.tab').forEach(tab => {
 
 document.getElementById('settings-link').addEventListener('click', (e) => {
   e.preventDefault();
-  chrome.runtime.openOptionsPage();
+  browserAPI.runtime.openOptionsPage();
 });
 
 const uploadZone = document.getElementById('upload-zone');
@@ -196,13 +197,13 @@ async function renderLatexTab() {
 
 document.getElementById('save-fields-btn').addEventListener('click', async () => {
   for (const [field, id] of [['title', 'field-title'], ['abstract', 'field-abstract'], ['keywords', 'field-keywords']]) {
-    await chrome.runtime.sendMessage({
+    await browserAPI.runtime.sendMessage({
       action: 'updateField',
       field,
       value: document.getElementById(id).value
     });
   }
-  const res = await chrome.runtime.sendMessage({ action: 'getManuscriptData' });
+  const res = await browserAPI.runtime.sendMessage({ action: 'getManuscriptData' });
   currentData = res.data;
   showStatus('extract-results', 'Changes saved!', 'success');
 });
@@ -224,7 +225,7 @@ document.getElementById('copy-all-btn').addEventListener('click', () => {
 document.getElementById('apply-shortening-btn').addEventListener('click', async () => {
   if (!selectedShortening) return;
   try {
-    const res = await chrome.runtime.sendMessage({ action: 'applyShortening', strategy: selectedShortening });
+    const res = await browserAPI.runtime.sendMessage({ action: 'applyShortening', strategy: selectedShortening });
     if (res.error) throw new Error(res.error);
     currentData = res.data;
     renderExtractTab();
@@ -237,7 +238,7 @@ document.getElementById('apply-shortening-btn').addEventListener('click', async 
 
 document.getElementById('llm-shorten-btn').addEventListener('click', async () => {
   try {
-    const res = await chrome.runtime.sendMessage({ action: 'applyShortening', strategy: 'llm' });
+    const res = await browserAPI.runtime.sendMessage({ action: 'applyShortening', strategy: 'llm' });
     if (res.error) throw new Error(res.error);
     currentData = res.data;
     renderExtractTab();
@@ -251,7 +252,7 @@ document.getElementById('llm-shorten-btn').addEventListener('click', async () =>
 document.getElementById('format-latex-btn').addEventListener('click', async () => {
   const journalKey = document.getElementById('journal-select').value;
   try {
-    const res = await chrome.runtime.sendMessage({ action: 'formatLatex', journalKey });
+    const res = await browserAPI.runtime.sendMessage({ action: 'formatLatex', journalKey });
     if (res.error) throw new Error(res.error);
     document.getElementById('latex-output').value = res.result.source;
     const changesEl = document.getElementById('latex-changes');
@@ -284,7 +285,7 @@ document.getElementById('download-latex-btn').addEventListener('click', () => {
 
 document.getElementById('show-panel-btn').addEventListener('click', async () => {
   try {
-    await chrome.runtime.sendMessage({ action: 'showPanel' });
+    await browserAPI.runtime.sendMessage({ action: 'showPanel' });
     showStatus('submit-status', 'Autofill panel shown on page.', 'success');
   } catch {
     showStatus('submit-status', 'Could not connect to page. Navigate to a submission site first.', 'error');
@@ -293,7 +294,7 @@ document.getElementById('show-panel-btn').addEventListener('click', async () => 
 
 document.getElementById('autofill-btn').addEventListener('click', async () => {
   try {
-    await chrome.runtime.sendMessage({ action: 'autofillPage' });
+    await browserAPI.runtime.sendMessage({ action: 'autofillPage' });
     showStatus('submit-status', 'Autofill triggered on current page.', 'success');
   } catch {
     showStatus('submit-status', 'Could not autofill. Navigate to a submission page first.', 'error');
@@ -306,7 +307,7 @@ document.getElementById('add-author-btn').addEventListener('click', async () => 
   if (!name || !currentData) return;
   currentData.authors = currentData.authors || [];
   currentData.authors.push({ name, confidence: 1, source: 'manual', index: currentData.authors.length });
-  await chrome.runtime.sendMessage({ action: 'updateField', field: 'authors', value: currentData.authors });
+  await browserAPI.runtime.sendMessage({ action: 'updateField', field: 'authors', value: currentData.authors });
   input.value = '';
   renderExtractTab();
 });
@@ -331,7 +332,7 @@ function escapeHtml(str) {
 }
 
 (async () => {
-  const res = await chrome.runtime.sendMessage({ action: 'getManuscriptData' });
+  const res = await browserAPI.runtime.sendMessage({ action: 'getManuscriptData' });
   if (res?.data) {
     currentData = res.data;
     document.getElementById('file-info').classList.remove('hidden');

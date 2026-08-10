@@ -1,6 +1,6 @@
 # Manuscript Submit Assistant
 
-A Chrome extension that uses an **agentic extraction pipeline** to identify pertinent metadata from scientific manuscripts and automate journal submission workflows.
+A cross-browser WebExtension (Chrome and Firefox) that uses an **agentic extraction pipeline** to identify pertinent metadata from scientific manuscripts and automate journal submission workflows.
 
 ## Features
 
@@ -50,13 +50,47 @@ On journal submission pages, the extension:
 
 ## Installation
 
-### Load as Unpacked Extension (Development)
+The same `extension/` folder works in both Chrome and Firefox. No separate build step is required.
+
+### Chrome
 
 1. Clone this repository
-2. Open Chrome and navigate to `chrome://extensions/`
+2. Open `chrome://extensions/`
 3. Enable **Developer mode** (top right)
 4. Click **Load unpacked**
 5. Select the `extension/` directory
+
+### Firefox
+
+Requires **Firefox 121+** (Manifest V3 with ES module background scripts).
+
+**Temporary add-on (development):**
+
+1. Clone this repository
+2. Open `about:debugging#/runtime/this-firefox`
+3. Click **Load Temporary Add-on…**
+4. Select `extension/manifest.json`
+
+**Permanent install (unsigned / self-distributed):**
+
+1. Zip the contents of the `extension/` folder (not the folder itself)
+2. Open `about:config` and set `xpinstall.signatures.required` to `false` (advanced users only)
+3. Install the `.xpi` via `about:addons` → gear icon → **Install Add-on From File…**
+
+For Firefox Add-ons (AMO) distribution, the manifest already includes `browser_specific_settings.gecko` with a fixed add-on ID.
+
+### Browser compatibility
+
+| Feature | Chrome | Firefox |
+|---------|--------|---------|
+| Metadata extraction | Yes | Yes |
+| Abstract shortening | Yes | Yes |
+| LaTeX formatting | Yes | Yes |
+| Submission autofill | Yes | Yes |
+| AI enhancement (API) | Yes | Yes |
+| Background handler | Service worker | Event page (scripts) |
+
+The extension uses the standard WebExtension `browser`/`chrome` API via a small polyfill (`lib/browser-api.js`). Chrome loads `background/service-worker.js`; Firefox loads `background/event-page.js`. Both share the same logic in `background/message-handler.js`.
 
 ### Configure Settings
 
@@ -96,9 +130,11 @@ On journal submission pages, the extension:
 
 ```
 extension/
-├── manifest.json           # Chrome extension manifest (MV3)
+├── manifest.json           # WebExtension manifest (MV3, Chrome + Firefox)
 ├── background/
-│   └── service-worker.js   # Background message handler
+│   ├── service-worker.js   # Chrome background entry
+│   ├── event-page.js       # Firefox background entry
+│   └── message-handler.js  # Shared message handling logic
 ├── content/
 │   ├── autofill.js         # Page autofill content script
 │   └── autofill.css        # Floating panel styles
@@ -111,12 +147,13 @@ extension/
 │   ├── options.css
 │   └── options.js
 ├── lib/
+│   ├── browser-api.js      # Chrome/Firefox API polyfill
 │   ├── parser.js           # File parsing (tex, txt, docx, pdf)
 │   ├── extractor.js        # Agentic metadata extraction
 │   ├── abstract.js         # Abstract shortening strategies
 │   ├── latex-formatter.js  # Journal LaTeX templates
 │   ├── autofill-mappings.js# Submission system field maps
-│   └── storage.js          # Chrome storage helpers
+│   └── storage.js          # Cross-browser storage helpers
 ├── icons/                  # Extension icons
 └── samples/
     └── sample-manuscript.tex
@@ -125,7 +162,7 @@ extension/
 ## Privacy
 
 - All manuscript parsing runs **locally in your browser**
-- API keys are stored in Chrome sync storage and only sent to your chosen provider
+- API keys are stored in browser sync storage and only sent to your chosen provider
 - No data is sent to any server unless you configure an AI API key
 
 ## License

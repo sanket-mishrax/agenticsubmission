@@ -1,6 +1,8 @@
 /**
- * Chrome storage helpers for manuscript data and settings.
+ * Cross-browser storage helpers for manuscript data and settings.
  */
+
+import { browserAPI } from './browser-api.js';
 
 const DEFAULT_SETTINGS = {
   apiProvider: 'none',
@@ -11,23 +13,23 @@ const DEFAULT_SETTINGS = {
 };
 
 export async function getSettings() {
-  const result = await chrome.storage.sync.get('settings');
+  const result = await browserAPI.storage.sync.get('settings');
   return { ...DEFAULT_SETTINGS, ...result.settings };
 }
 
 export async function saveSettings(settings) {
-  await chrome.storage.sync.set({ settings: { ...DEFAULT_SETTINGS, ...settings } });
+  await browserAPI.storage.sync.set({ settings: { ...DEFAULT_SETTINGS, ...settings } });
 }
 
 export async function getManuscriptData() {
-  const result = await chrome.storage.local.get('manuscriptData');
+  const result = await browserAPI.storage.local.get('manuscriptData');
   return result.manuscriptData || null;
 }
 
 export async function saveManuscriptData(data) {
-  await chrome.storage.local.set({ manuscriptData: data });
+  await browserAPI.storage.local.set({ manuscriptData: data });
 }
 
 export async function clearManuscriptData() {
-  await chrome.storage.local.remove('manuscriptData');
+  await browserAPI.storage.local.remove('manuscriptData');
 }
