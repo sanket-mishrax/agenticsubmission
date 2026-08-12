@@ -2,11 +2,17 @@
  * Background service worker for Manuscript Submit Assistant.
  */
 
-import { getManuscriptData, saveManuscriptData, getSettings } from '../lib/storage.js';
+import { getManuscriptData, saveManuscriptData, getSettings, saveSettings } from '../lib/storage.js';
 import { parseManuscriptFile } from '../lib/parser.js';
 import { extractManuscriptMetadata } from '../lib/extractor.js';
 import { generateShorteningOptions, shortenWithLLM } from '../lib/abstract.js';
 import { formatLatexForJournal } from '../lib/latex-formatter.js';
+import {
+  matchJournals,
+  identifyJournalFromUrl,
+  buildSubmissionPackage,
+  getJournalById
+} from '../lib/octree.js';
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   handleMessage(message).then(sendResponse).catch(err => {
@@ -120,6 +126,40 @@ async function handleMessage(message) {
 
     case 'getSettings': {
       return { settings: await getSettings() };
+    }
+
+    case 'matchJournals': {
+      const data = await getManuscriptData();
+      if (!data) throw new Error('No manuscript loaded');
+      const matches = matchJournals(data, message.options || {});
+      return { matches };
+    }
+
+    case 'identifyJournal': {
+      const result = identifyJournalFromUrl(message.url, message.pageTitle);
+      return { result };
+    }
+
+    case 'setTargetJournal': {
+      const data = await getManuscriptData();
+      if (!data) throw new Error('No manuscript loaded');
+      const pkg = buildSubmissionPackage(data, message.journalId);
+      if (!pkg) throw new Error('Unknown journal');
+      data.targetJournal = pkg;
+      await saveManuscriptData(data);
+      const settings = await getSettings();
+      settings.preferredJournal = message.journalId;
+      await saveSettings(settings);
+      return { data, targetJournal: pkg };
+    }
+
+    case 'getSubmissionFields': {
+      const data = await getManuscriptData();
+      if (!data) throw new Error('No manuscript loaded');
+      const journalId = message.journalId || data.targetJournal?.journal?.id;
+      if (!journalId) throw new Error('No target journal selected');
+      const pkg = buildSubmissionPackage(data, journalId);
+      return { package: pkg };
     }
 
     default:
