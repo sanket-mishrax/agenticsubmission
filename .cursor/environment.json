@@ -1,0 +1,5 @@
+{
+  "name": "Manuscript Submit Assistant",
+  "install": "./.cursor/scripts/cloud-agent-install.sh",
+  "chromeExecutablePath": "/usr/local/bin/google-chrome"
+}
