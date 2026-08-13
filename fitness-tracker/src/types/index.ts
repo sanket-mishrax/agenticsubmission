@@ -210,6 +210,119 @@ export function searchFoods(query: string): FoodCatalogItem[] {
   );
 }
 
+/** Extra calorie estimates for foods not always in the main catalog */
+const CALORIE_LOOKUP: { keywords: string[]; caloriesPerUnit: number; unit: FoodUnit; defaultQty: number }[] = [
+  { keywords: ['paneer tikka'], caloriesPerUnit: 55, unit: 'piece', defaultQty: 6 },
+  { keywords: ['paneer', 'cottage cheese'], caloriesPerUnit: 45, unit: 'piece', defaultQty: 6 },
+  { keywords: ['palak paneer'], caloriesPerUnit: 280, unit: 'bowl', defaultQty: 1 },
+  { keywords: ['butter chicken', 'murgh makhani'], caloriesPerUnit: 350, unit: 'bowl', defaultQty: 1 },
+  { keywords: ['biryani'], caloriesPerUnit: 450, unit: 'plate', defaultQty: 1 },
+  { keywords: ['khichdi', 'khichri'], caloriesPerUnit: 220, unit: 'bowl', defaultQty: 1 },
+  { keywords: ['puri', 'poori'], caloriesPerUnit: 100, unit: 'piece', defaultQty: 2 },
+  { keywords: ['aloo paratha'], caloriesPerUnit: 290, unit: 'piece', defaultQty: 1 },
+  { keywords: ['paratha'], caloriesPerUnit: 210, unit: 'piece', defaultQty: 1 },
+  { keywords: ['roti', 'chapati', 'phulka'], caloriesPerUnit: 120, unit: 'roti', defaultQty: 2 },
+  { keywords: ['naan', 'butter naan'], caloriesPerUnit: 260, unit: 'piece', defaultQty: 1 },
+  { keywords: ['rice', 'chawal'], caloriesPerUnit: 200, unit: 'cup', defaultQty: 1 },
+  { keywords: ['dal', 'daal', 'lentil'], caloriesPerUnit: 180, unit: 'bowl', defaultQty: 1 },
+  { keywords: ['idli'], caloriesPerUnit: 58, unit: 'piece', defaultQty: 3 },
+  { keywords: ['masala dosa'], caloriesPerUnit: 250, unit: 'piece', defaultQty: 1 },
+  { keywords: ['dosa'], caloriesPerUnit: 120, unit: 'piece', defaultQty: 1 },
+  { keywords: ['vada', 'medu vada'], caloriesPerUnit: 150, unit: 'piece', defaultQty: 2 },
+  { keywords: ['samosa'], caloriesPerUnit: 260, unit: 'piece', defaultQty: 1 },
+  { keywords: ['pakora', 'bhajiya', 'pakoda'], caloriesPerUnit: 35, unit: 'piece', defaultQty: 4 },
+  { keywords: ['poha'], caloriesPerUnit: 180, unit: 'plate', defaultQty: 1 },
+  { keywords: ['upma'], caloriesPerUnit: 200, unit: 'bowl', defaultQty: 1 },
+  { keywords: ['omelette', 'omelet'], caloriesPerUnit: 95, unit: 'piece', defaultQty: 2 },
+  { keywords: ['egg', 'boiled egg'], caloriesPerUnit: 78, unit: 'piece', defaultQty: 2 },
+  { keywords: ['chicken curry'], caloriesPerUnit: 300, unit: 'bowl', defaultQty: 1 },
+  { keywords: ['chicken', 'tandoori'], caloriesPerUnit: 85, unit: 'piece', defaultQty: 4 },
+  { keywords: ['fish'], caloriesPerUnit: 90, unit: 'piece', defaultQty: 2 },
+  { keywords: ['rajma'], caloriesPerUnit: 210, unit: 'bowl', defaultQty: 1 },
+  { keywords: ['chole', 'chana', 'chickpea'], caloriesPerUnit: 220, unit: 'bowl', defaultQty: 1 },
+  { keywords: ['curd', 'dahi', 'yogurt'], caloriesPerUnit: 60, unit: 'cup', defaultQty: 1 },
+  { keywords: ['milk'], caloriesPerUnit: 150, unit: 'glass', defaultQty: 1 },
+  { keywords: ['banana'], caloriesPerUnit: 105, unit: 'piece', defaultQty: 1 },
+  { keywords: ['apple'], caloriesPerUnit: 95, unit: 'piece', defaultQty: 1 },
+  { keywords: ['mango'], caloriesPerUnit: 100, unit: 'piece', defaultQty: 1 },
+  { keywords: ['orange'], caloriesPerUnit: 62, unit: 'piece', defaultQty: 1 },
+  { keywords: ['almond', 'badam'], caloriesPerUnit: 7, unit: 'piece', defaultQty: 10 },
+  { keywords: ['cashew', 'kaju'], caloriesPerUnit: 9, unit: 'piece', defaultQty: 8 },
+  { keywords: ['biscuit', 'cookie'], caloriesPerUnit: 40, unit: 'piece', defaultQty: 2 },
+  { keywords: ['bread', 'toast'], caloriesPerUnit: 80, unit: 'slice', defaultQty: 2 },
+  { keywords: ['oats', 'oatmeal'], caloriesPerUnit: 150, unit: 'bowl', defaultQty: 1 },
+  { keywords: ['protein shake', 'whey'], caloriesPerUnit: 120, unit: 'serving', defaultQty: 1 },
+  { keywords: ['pizza'], caloriesPerUnit: 285, unit: 'slice', defaultQty: 2 },
+  { keywords: ['burger'], caloriesPerUnit: 350, unit: 'piece', defaultQty: 1 },
+  { keywords: ['fries', 'french fries'], caloriesPerUnit: 320, unit: 'serving', defaultQty: 1 },
+  { keywords: ['pasta', 'noodles', 'maggi'], caloriesPerUnit: 350, unit: 'bowl', defaultQty: 1 },
+  { keywords: ['salad'], caloriesPerUnit: 50, unit: 'bowl', defaultQty: 1 },
+  { keywords: ['soup'], caloriesPerUnit: 120, unit: 'bowl', defaultQty: 1 },
+  { keywords: ['tea', 'chai'], caloriesPerUnit: 40, unit: 'cup', defaultQty: 1 },
+  { keywords: ['coffee'], caloriesPerUnit: 15, unit: 'cup', defaultQty: 1 },
+  { keywords: ['juice'], caloriesPerUnit: 110, unit: 'glass', defaultQty: 1 },
+  { keywords: ['chocolate'], caloriesPerUnit: 55, unit: 'piece', defaultQty: 1 },
+  { keywords: ['icecream', 'ice cream'], caloriesPerUnit: 200, unit: 'cup', defaultQty: 1 },
+];
+
+export interface CalorieEstimate {
+  caloriesPerUnit: number;
+  unit: FoodUnit;
+  defaultQty: number;
+  matchedAs: string;
+  source: 'catalog' | 'lookup';
+}
+
+/**
+ * Autofill calories for a custom food name by matching catalog / keyword lookup.
+ * Longer keyword matches win so "paneer tikka" beats "paneer".
+ */
+export function estimateCaloriesFromName(name: string): CalorieEstimate | null {
+  const q = name.trim().toLowerCase();
+  if (q.length < 2) return null;
+
+  // Exact / includes match against catalog (prefer longer names)
+  const catalogHits = FOOD_CATALOG
+    .map((f) => {
+      const names = [f.name.toLowerCase(), ...(f.aliases ?? []).map((a) => a.toLowerCase())];
+      const hit = names.find((n) => q.includes(n) || n.includes(q));
+      return hit ? { food: f, matchedAs: hit, score: hit.length } : null;
+    })
+    .filter(Boolean) as { food: FoodCatalogItem; matchedAs: string; score: number }[];
+
+  catalogHits.sort((a, b) => b.score - a.score);
+  if (catalogHits[0]) {
+    const { food, matchedAs } = catalogHits[0];
+    return {
+      caloriesPerUnit: food.caloriesPerUnit,
+      unit: food.unit,
+      defaultQty: food.defaultQty,
+      matchedAs,
+      source: 'catalog',
+    };
+  }
+
+  // Keyword lookup (longer keywords first)
+  const sorted = [...CALORIE_LOOKUP].sort(
+    (a, b) => Math.max(...b.keywords.map((k) => k.length)) - Math.max(...a.keywords.map((k) => k.length))
+  );
+
+  for (const entry of sorted) {
+    const hit = entry.keywords.find((k) => q.includes(k));
+    if (hit) {
+      return {
+        caloriesPerUnit: entry.caloriesPerUnit,
+        unit: entry.unit,
+        defaultQty: entry.defaultQty,
+        matchedAs: hit,
+        source: 'lookup',
+      };
+    }
+  }
+
+  return null;
+}
+
 export function formatFoodQty(food: FoodItem): string {
   const displayUnit =
     food.quantity === 1 ? singularUnit(food.unit) : pluralUnit(food.unit);

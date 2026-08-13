@@ -11,9 +11,11 @@ import {
   calcFoodCalories,
   formatFoodQty,
   getMealCalories,
+  estimateCaloriesFromName,
   type MealType,
   type FoodCatalogItem,
   type FoodItem,
+  type FoodUnit,
 } from '../types';
 
 const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'eveningSnack', 'dinner'];
@@ -62,6 +64,9 @@ export function MealTracker() {
   const [customName, setCustomName] = useState('');
   const [customCals, setCustomCals] = useState('');
   const [customQty, setCustomQty] = useState('1');
+  const [customUnit, setCustomUnit] = useState<FoodUnit>('serving');
+  const [autofillHint, setAutofillHint] = useState<string | null>(null);
+  const [calsManual, setCalsManual] = useState(false);
   const [showCustom, setShowCustom] = useState(false);
 
   const results = useMemo(() => searchFoods(query), [query]);
@@ -103,6 +108,41 @@ export function MealTracker() {
     setPending((prev) => prev.filter((p) => p.catalogId !== catalogId));
   };
 
+  const handleCustomNameChange = (value: string) => {
+    setCustomName(value);
+
+    // Detect leading quantity like "6 paneer" or "6 paneer pieces"
+    const qtyMatch = value.trim().match(/^(\d+(?:\.\d+)?)\s+(.+)$/);
+    const qtyFromName = qtyMatch ? Number(qtyMatch[1]) : null;
+    const nameForMatch = qtyMatch ? qtyMatch[2] : value;
+
+    const estimate = estimateCaloriesFromName(nameForMatch);
+
+    if (estimate && !calsManual) {
+      setCustomCals(String(estimate.caloriesPerUnit));
+      setCustomUnit(estimate.unit);
+      if (qtyFromName && qtyFromName > 0) {
+        setCustomQty(String(qtyFromName));
+      } else {
+        setCustomQty(String(estimate.defaultQty));
+      }
+      const qty = qtyFromName && qtyFromName > 0 ? qtyFromName : estimate.defaultQty;
+      const total = calcFoodCalories(estimate.caloriesPerUnit, qty);
+      setAutofillHint(
+        `Autofilled: ${estimate.caloriesPerUnit} kcal / ${estimate.unit} × ${qty} = ${total} kcal (matched “${estimate.matchedAs}”)`
+      );
+    } else if (estimate && calsManual) {
+      if (qtyFromName && qtyFromName > 0) setCustomQty(String(qtyFromName));
+      setAutofillHint('Calories edited manually — name match available if you clear kcal');
+    } else if (value.trim().length >= 2) {
+      setAutofillHint('No match found — enter calories manually');
+      if (!calsManual) setCustomCals('');
+    } else {
+      setAutofillHint(null);
+      if (!calsManual) setCustomCals('');
+    }
+  };
+
   const handleAddCustom = () => {
     const name = customName.trim();
     const perUnit = Number(customCals);
@@ -112,7 +152,7 @@ export function MealTracker() {
     const food: Omit<FoodItem, 'id'> = {
       name,
       quantity: qty,
-      unit: 'serving',
+      unit: customUnit,
       caloriesPerUnit: perUnit,
       calories: calcFoodCalories(perUnit, qty),
     };
@@ -120,6 +160,9 @@ export function MealTracker() {
     setCustomName('');
     setCustomCals('');
     setCustomQty('1');
+    setCustomUnit('serving');
+    setAutofillHint(null);
+    setCalsManual(false);
     setShowCustom(false);
     setNotes('');
     setActiveMeal(null);
@@ -308,7 +351,7 @@ export function MealTracker() {
                   onClick={() => setShowCustom(!showCustom)}
                   className="text-xs text-accent-cyan hover:underline"
                 >
-                  {showCustom ? 'Hide custom food' : '+ Add custom food (name + calories)'}
+                  {showCustom ? 'Hide custom food' : '+ Add custom food (calories autofill from name)'}
                 </button>
                 <AnimatePresence>
                   {showCustom && (
@@ -316,31 +359,66 @@ export function MealTracker() {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="grid grid-cols-1 sm:grid-cols-4 gap-2 mt-2 overflow-hidden"
+                      className="mt-2 overflow-hidden space-y-2"
                     >
-                      <input
-                        placeholder="Food name"
-                        value={customName}
-                        onChange={(e) => setCustomName(e.target.value)}
-                        className="input-field text-sm sm:col-span-2"
-                      />
-                      <input
-                        type="number"
-                        placeholder="kcal per unit"
-                        value={customCals}
-                        onChange={(e) => setCustomCals(e.target.value)}
-                        className="input-field text-sm"
-                      />
-                      <input
-                        type="number"
-                        placeholder="Quantity"
-                        value={customQty}
-                        onChange={(e) => setCustomQty(e.target.value)}
-                        className="input-field text-sm"
-                      />
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                        <input
+                          placeholder="Food name (e.g. 6 paneer pieces)"
+                          value={customName}
+                          onChange={(e) => handleCustomNameChange(e.target.value)}
+                          className="input-field text-sm sm:col-span-2"
+                        />
+                        <div className="relative">
+                          <input
+                            type="number"
+                            placeholder="kcal / unit"
+                            value={customCals}
+                            onChange={(e) => {
+                              setCustomCals(e.target.value);
+                              setCalsManual(true);
+                              setAutofillHint('Calories edited manually');
+                            }}
+                            className="input-field text-sm pr-12"
+                          />
+                          {customCals && !calsManual && (
+                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-accent-emerald font-medium">
+                              auto
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <input
+                            type="number"
+                            placeholder="Qty"
+                            value={customQty}
+                            onChange={(e) => setCustomQty(e.target.value)}
+                            className="input-field text-sm flex-1"
+                          />
+                          <span className="text-xs text-white/40 self-center shrink-0 w-14 truncate">
+                            {customUnit}
+                          </span>
+                        </div>
+                      </div>
+                      {autofillHint && (
+                        <p
+                          className={`text-xs ${
+                            autofillHint.startsWith('Autofilled')
+                              ? 'text-accent-emerald'
+                              : autofillHint.includes('manual')
+                                ? 'text-accent-amber'
+                                : 'text-white/40'
+                          }`}
+                        >
+                          {autofillHint}
+                          {customCals && customQty
+                            ? ` · Total ${calcFoodCalories(Number(customCals) || 0, Number(customQty) || 0)} kcal`
+                            : ''}
+                        </p>
+                      )}
                       <button
                         onClick={handleAddCustom}
-                        className="btn-secondary text-xs sm:col-span-4"
+                        disabled={!customName.trim() || !customCals}
+                        className="btn-secondary text-xs w-full disabled:opacity-40"
                       >
                         Log custom food
                         {customCals && customQty
