@@ -1,0 +1,7 @@
+# Public static hosting for VitalSync
+# Anyone with the link can open — no login / network token required.
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
