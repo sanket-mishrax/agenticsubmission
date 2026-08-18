@@ -126,14 +126,28 @@
 
     <!-- Submit Tab -->
     <section id="tab-submit" class="tab-panel">
-      <div class="submit-info">
-        <h3>Journal Submission Autofill</h3>
-        <p>Navigate to a journal submission page, then use the buttons below to fill form fields automatically.</p>
-        <p class="hint">Supported: Elsevier Editorial Manager, Wiley ScholarOne, Springer Nature, and generic forms.</p>
+      <div id="submit-empty" class="empty-state">
+        <p>Upload a manuscript to see journal suggestions and submission field status.</p>
       </div>
-      <div class="actions">
-        <button class="btn btn-primary" id="show-panel-btn">Show Autofill Panel on Page</button>
-        <button class="btn btn-secondary" id="autofill-btn">Autofill Current Page</button>
+      <div id="submit-tools" class="hidden">
+        <div class="submit-info">
+          <h3>Journal Submission</h3>
+          <p id="submit-journal-summary">Analyzing manuscript for relevant journals...</p>
+        </div>
+
+        <div class="field-group">
+          <label>Target Journal</label>
+          <select id="target-journal-select"></select>
+        </div>
+
+        <div id="journal-field-status" class="journal-field-status"></div>
+        <div id="journal-suggestions" class="journal-suggestions"></div>
+
+        <div class="actions">
+          <button class="btn btn-primary" id="open-submission-btn">Open Submission Page</button>
+          <button class="btn btn-primary" id="show-panel-btn">Show Autofill Panel</button>
+          <button class="btn btn-secondary" id="autofill-btn">Autofill Current Page</button>
+        </div>
       </div>
       <div id="submit-status" class="status-msg hidden"></div>
     </section>

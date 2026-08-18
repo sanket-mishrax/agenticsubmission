@@ -3,6 +3,12 @@
  * Uses multi-pass heuristics with confidence scoring; optional LLM enhancement.
  */
 
+import {
+  extractJournalHints,
+  matchJournals,
+  buildSubmissionPackage
+} from './octree.js';
+
 const EMAIL_REGEX = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
 
 /**
@@ -223,6 +229,8 @@ export async function extractManuscriptMetadata(parsed, options = {}) {
   const wordLimit = options.abstractWordLimit || 250;
   const abstractWordCount = countWords(abstract.value);
 
+  const journalHints = extractJournalHints(plainText, fileType);
+
   const result = {
     title,
     authors,
@@ -235,8 +243,10 @@ export async function extractManuscriptMetadata(parsed, options = {}) {
       exceedsLimit: abstractWordCount > wordLimit
     },
     keywords,
+    journalHints,
     fileType,
     fileName: parsed.fileName,
+    rawText: plainText,
     extractedAt: new Date().toISOString(),
     agentPasses: [
       { pass: 'structure', description: 'LaTeX/section structure analysis', completed: true },
@@ -244,6 +254,30 @@ export async function extractManuscriptMetadata(parsed, options = {}) {
       { pass: 'validation', description: 'Cross-field consistency check', completed: true }
     ]
   };
+
+  // Journal octree matching — identify relevant submission targets
+  const journalMatches = matchJournals(result, { limit: 5 });
+  result.suggestedJournals = journalMatches.map(m => ({
+    id: m.journal.id,
+    name: m.journal.name,
+    publisher: m.journal.publisher,
+    score: m.score,
+    reasons: m.reasons,
+    submissionUrl: m.journal.submissionUrl,
+    submissionPlatform: m.journal.submissionPlatform,
+    abstractWordLimit: m.journal.abstractWordLimit,
+    readyToSubmit: m.submissionFields.readyToSubmit,
+    missingFields: m.submissionFields.requiredMissing
+  }));
+
+  if (journalMatches.length > 0) {
+    result.targetJournal = buildSubmissionPackage(result, journalMatches[0].journal.id);
+    result.agentPasses.push({
+      pass: 'journal-match',
+      description: `Matched ${journalMatches.length} relevant journal(s) via octree`,
+      completed: true
+    });
+  }
 
   // Optional LLM enhancement
   if (options.apiKey && options.apiProvider !== 'none') {

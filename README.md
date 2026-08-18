@@ -45,8 +45,18 @@ Apply minor LaTeX source transformations for target journals:
 On journal submission pages, the extension:
 
 - Detects the submission system (Elsevier Editorial Manager, Wiley ScholarOne, Springer Nature, etc.)
+- Identifies the target journal from the page URL/title using the **Journal Octree**
 - Shows a floating autofill panel with detected form fields
 - Fills title, abstract, keywords, author name, email, and affiliation fields
+
+### 5. Journal Octree Matching
+The extension uses a hierarchical **Journal Octree** to:
+
+- **Extract journal hints** from manuscript LaTeX (document class, bibliography style, `\journalname{}`)
+- **Match manuscripts to relevant journals** based on keywords, abstract topics, and content analysis
+- **Show submission field requirements** per journal (required vs optional, abstract word limits)
+- **Identify journals** when you navigate to a submission page
+- **Suggest ranked journals** in the Submit tab with match scores and readiness status
 
 ## Installation
 
@@ -87,10 +97,17 @@ On journal submission pages, the extension:
 3. Click **Apply Journal Format**
 4. Copy or download the formatted `.tex` file
 
-### Step 5: Autofill Submission Form
+### Step 5: Submit to a Journal
+1. Switch to the **Submit** tab
+2. Review suggested journals ranked by relevance to your manuscript
+3. Select a target journal to see its required submission fields and readiness status
+4. Click **Open Submission Page** to navigate to the journal's portal
+5. Use **Show Autofill Panel** or **Autofill Current Page** to fill form fields
+
+### Step 6: Autofill Submission Form (on submission page)
 1. Navigate to your journal's submission page
-2. Switch to the **Submit** tab
-3. Click **Show Autofill Panel on Page** or **Autofill Current Page**
+2. The floating panel detects the submission system and journal
+3. Click **Fill Detected Fields** or **Fill All Fields**
 
 ## Project Structure
 
@@ -115,6 +132,7 @@ extension/
 │   ├── extractor.js        # Agentic metadata extraction
 │   ├── abstract.js         # Abstract shortening strategies
 │   ├── latex-formatter.js  # Journal LaTeX templates
+│   ├── octree.js           # Journal taxonomy, matching, and field schemas
 │   ├── autofill-mappings.js# Submission system field maps
 │   └── storage.js          # Chrome storage helpers
 ├── icons/                  # Extension icons

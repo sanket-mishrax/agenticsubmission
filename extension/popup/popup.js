@@ -7,6 +7,7 @@ import { extractManuscriptMetadata } from '../lib/extractor.js';
 import { saveManuscriptData, getSettings } from '../lib/storage.js';
 import { generateShorteningOptions } from '../lib/abstract.js';
 import { getJournalList } from '../lib/latex-formatter.js';
+import { getAllJournals, buildSubmissionPackage } from '../lib/octree.js';
 
 let currentData = null;
 let selectedShortening = null;
@@ -80,6 +81,7 @@ async function processFile(file) {
     renderExtractTab();
     await renderAbstractTab();
     await renderLatexTab();
+    renderSubmitTab();
     document.querySelector('[data-tab="extract"]').click();
   } catch (err) {
     status.className = 'status-msg error';
@@ -180,6 +182,107 @@ async function renderAbstractTab() {
     llmSection.classList.add('hidden');
   }
 }
+
+async function renderSubmitTab() {
+  if (!currentData) {
+    document.getElementById('submit-empty').classList.remove('hidden');
+    document.getElementById('submit-tools').classList.add('hidden');
+    return;
+  }
+
+  document.getElementById('submit-empty').classList.add('hidden');
+  document.getElementById('submit-tools').classList.remove('hidden');
+
+  const suggestions = currentData.suggestedJournals || [];
+  const select = document.getElementById('target-journal-select');
+  const allJournals = getAllJournals();
+
+  // Populate select with suggested journals first, then all others
+  const suggestedIds = new Set(suggestions.map(s => s.id));
+  const options = [
+    ...suggestions.map(s => ({ id: s.id, name: s.name, suggested: true })),
+    ...allJournals.filter(j => !suggestedIds.has(j.id)).map(j => ({ id: j.id, name: j.name, suggested: false }))
+  ];
+
+  select.innerHTML = options.map(o =>
+    `<option value="${o.id}">${escapeHtml(o.name)}${o.suggested ? ' ★' : ''}</option>`
+  ).join('');
+
+  const summary = document.getElementById('submit-journal-summary');
+  if (suggestions.length > 0) {
+    summary.textContent = `Found ${suggestions.length} relevant journal(s) based on your manuscript content.`;
+  } else {
+    summary.textContent = 'No strong journal matches found. Select a target journal manually.';
+  }
+
+  renderJournalSuggestions(suggestions);
+  renderJournalFieldStatus(select.value);
+
+  select.onchange = () => renderJournalFieldStatus(select.value);
+}
+
+function renderJournalSuggestions(suggestions) {
+  const el = document.getElementById('journal-suggestions');
+  if (suggestions.length === 0) {
+    el.innerHTML = '<p class="hint">Upload a manuscript with keywords/abstract to get journal suggestions.</p>';
+    return;
+  }
+
+  el.innerHTML = '<h3>Suggested Journals</h3>' + suggestions.map(s => `
+    <div class="journal-card" data-id="${s.id}">
+      <h4>${escapeHtml(s.name)} <span class="score">${(s.score * 100).toFixed(0)}% match</span></h4>
+      <div class="meta">${escapeHtml(s.publisher)} · ${escapeHtml(s.submissionPlatform)} · Abstract limit: ${s.abstractWordLimit} words</div>
+      <div class="reasons">${s.reasons.slice(0, 2).map(r => escapeHtml(r)).join(' · ')}</div>
+      <span class="ready-badge ${s.readyToSubmit ? 'ready' : 'incomplete'}">
+        ${s.readyToSubmit ? '✓ Ready to submit' : `Missing: ${s.missingFields.join(', ')}`}
+      </span>
+    </div>
+  `).join('');
+
+  el.querySelectorAll('.journal-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.getElementById('target-journal-select').value = card.dataset.id;
+      renderJournalFieldStatus(card.dataset.id);
+      el.querySelectorAll('.journal-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+    });
+  });
+}
+
+function renderJournalFieldStatus(journalId) {
+  const pkg = buildSubmissionPackage(currentData, journalId);
+  const el = document.getElementById('journal-field-status');
+  if (!pkg) {
+    el.innerHTML = '';
+    return;
+  }
+
+  const { submissionFields, journal } = pkg;
+  const abstractNote = submissionFields.abstractOk
+    ? `${submissionFields.abstractWordCount}/${journal.abstractWordLimit} words`
+    : `${submissionFields.abstractWordCount}/${journal.abstractWordLimit} words (over limit!)`;
+
+  el.innerHTML = `
+    <strong>Submission fields for ${escapeHtml(journal.name)}</strong>
+    <p class="hint" style="margin:6px 0">Abstract: ${abstractNote}</p>
+    ${Object.entries(submissionFields.fields).map(([name, f]) => `
+      <div class="field-row">
+        <span class="field-name">${escapeHtml(name)}${f.required ? ' *' : ''}</span>
+        <span class="field-status ${f.filled ? 'filled' : (f.required ? 'missing' : 'optional')}">
+          ${f.filled ? '✓ filled' : (f.required ? '✗ missing' : 'optional')}
+        </span>
+      </div>
+    `).join('')}
+  `;
+}
+
+document.getElementById('open-submission-btn').addEventListener('click', () => {
+  const journalId = document.getElementById('target-journal-select').value;
+  const pkg = buildSubmissionPackage(currentData, journalId);
+  if (pkg?.submissionUrl) {
+    chrome.tabs.create({ url: pkg.submissionUrl });
+  }
+});
 
 async function renderLatexTab() {
   if (!currentData?.rawLatex) return;
@@ -342,5 +445,6 @@ function escapeHtml(str) {
     renderExtractTab();
     await renderAbstractTab();
     await renderLatexTab();
+    renderSubmitTab();
   }
 })();
