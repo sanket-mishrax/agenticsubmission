@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Manuscript Assistant — Browser Smoke Test</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; max-width: 900px; }
+    .pass { color: #0a7; font-weight: 600; }
+    .fail { color: #c00; font-weight: 600; }
+    pre { background: #f4f4f4; padding: 1rem; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>Manuscript Assistant — Browser Smoke Test</h1>
+  <p id="status">Running extraction...</p>
+  <div id="results"></div>
+  <script type="module">
+    import { extractManuscriptMetadata } from '/extension/lib/extractor.js';
+
+    const status = document.getElementById('status');
+    const results = document.getElementById('results');
+
+    try {
+      const resp = await fetch('/extension/samples/sample-manuscript.tex');
+      const rawText = await resp.text();
+      const metadata = await extractManuscriptMetadata(
+        { fileName: 'sample-manuscript.tex', fileType: 'latex', rawText },
+        { abstractWordLimit: 250 }
+      );
+
+      const checks = [
+        ['Title extracted', metadata.title?.value?.includes('Agentic Extraction')],
+        ['Authors found', metadata.authors?.length >= 2],
+        ['Emails found', metadata.emails?.includes('jane.smith@stanford.edu')],
+        ['Abstract extracted', metadata.abstract?.wordCount > 50],
+        ['Keywords extracted', metadata.keywords?.value?.includes('manuscript submission')],
+      ];
+
+      const allPassed = checks.every(([, ok]) => ok);
+      status.innerHTML = allPassed
+        ? '<span class="pass">All checks passed</span>'
+        : '<span class="fail">Some checks failed</span>';
+
+      results.innerHTML = `
+        <h2>Checks</h2>
+        <ul>${checks.map(([label, ok]) =>
+          `<li class="${ok ? 'pass' : 'fail'}">${ok ? '✓' : '✗'} ${label}</li>`
+        ).join('')}</ul>
+        <h2>Extracted Metadata</h2>
+        <pre>${JSON.stringify({
+          title: metadata.title?.value,
+          authors: metadata.authors?.map(a => a.name),
+          emails: metadata.emails,
+          abstractWords: metadata.abstract?.wordCount,
+          keywords: metadata.keywords?.value,
+        }, null, 2)}</pre>`;
+    } catch (err) {
+      status.innerHTML = `<span class="fail">Error: ${err.message}</span>`;
+    }
+  </script>
+</body>
+</html>
